@@ -10,7 +10,7 @@ tinyKnight is a simple game made for micropython on the Cardputer.
 
 ## FAQ
 
-> Why not a different micropython firmware?
+> Why not use the stock micropython firmware?
 
 The Cardputer uses the ST7789 display driver for its 240x135 LCD. To get the most out of it and play the game at a reasonable framerate we use S3LCD which is a driver written in C and baked into the MicroPython firmware linked above. This performs ~10 times faster than using a similar driver written in Python (like [this](https://github.com/russhughes/st7789py_mpy/)).
 
