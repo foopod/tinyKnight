@@ -8,7 +8,7 @@ tinyKnight is a simple game made for micropython on the Cardputer.
 2. Copy the files from the `tinyKnight` folder in this repo to your cardputer using a MicroPython IDE (like Thonny).
 3. Turn on the cardputer and the game should start.
 
-## FAQ
+## Notes
 
 > Why not use the stock micropython firmware?
 
