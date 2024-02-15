@@ -16,7 +16,5 @@ The Cardputer uses the ST7789 display driver for its 240x135 LCD. To get the mos
 
 ## To-do
 
-- Display a score in the top right
-- Display score and high score on death
-- Handle death properly (at the moment you must reset the device)
+- Save high scores (maybe even publish online)
 - Powerups (temp invincibility, speed boost, etc)
