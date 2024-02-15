@@ -8,6 +8,11 @@ import vga1_bold_16x32 as big_font
 import vga1_8x8 as small_font
 import random
 
+tft = tft_config.config(tft_config.WIDE)  # configure display
+tft.init()
+
+kb = keyboard.KeyBoard()
+
 class Obstacle:
     def __init__(self):
         self.col = 238
@@ -19,13 +24,14 @@ class Obstacle:
         self.speed = 7
         self.count = 0
 
-    def move(self):
+    def move(self, score):
         self.col -= self.speed
         if self.col < - self.width - self.overshoot:
             self.col = 240 + self.width
             self.randomize()
             self.count +=1
-            if self.count > 10:
+            score+=5
+            if self.count > 5:
                 self.count = 0
                 self.speed +=1
             
@@ -112,17 +118,6 @@ class Knight:
             else:
                 self.row += self.y_velocity
                 self.y_velocity += 3
-        
-        # check death
-        if (
-            self.col < obstacle.col + obstacle.width and
-            self.col + self.width > obstacle.col and
-            self.row < obstacle.row + obstacle.height and
-            self.row + self.height > obstacle.row
-          ) :
-            self.dead = True
-            self.y_velocity = -20
-            
             
         # animation
         if self.dead:
@@ -133,7 +128,7 @@ class Knight:
                 self.frame = 0
         else:
             self.frame = 1
-        
+    
     def jump(self):
         if not self.visible:
             return
@@ -149,6 +144,16 @@ class Knight:
             return
         tft.bitmap(self.bitmap, self.col, self.row, self.frame)
         
+def check_collisions(sprite, obstacle):
+    if (
+            sprite.col < obstacle.col + obstacle.width and
+            sprite.col + sprite.width > obstacle.col and
+            sprite.row < obstacle.row + obstacle.height and
+            sprite.row + sprite.height > obstacle.row
+          ) :
+            sprite.dead = True
+            sprite.y_velocity = -20
+        
 def show_menu(sprite):
     title = "tinyKnight"
     length = len(title)
@@ -158,6 +163,9 @@ def show_menu(sprite):
         tft.height() // 2 - big_font.HEIGHT)
     
     tft.show()
+    
+    pressed_keys = []
+    prev_pressed_keys = []
     
     play_game = False
     
@@ -180,39 +188,58 @@ def show_menu(sprite):
             tft.text(small_font, "ok to start", 126, 116)
         sprite.draw()
         tft.show()
+        
+def play_game():
+    tft.fill(s3lcd.BLACK)
+    tft.show()
+
+    score = 0
+
+    sprite = Knight(knight_bitmap)
+
+    obstacle = Obstacle()
+
+    show_menu(sprite)
     
-tft = tft_config.config(tft_config.WIDE)  # configure display
-tft.init()
-tft.fill(s3lcd.BLACK)
-tft.show()
+    pressed_keys = []
+    prev_pressed_keys = []
 
-kb = keyboard.KeyBoard()
-pressed_keys = []
-prev_pressed_keys = []
-
-sprite = Knight(knight_bitmap)
-
-obstacle = Obstacle()
-
-show_menu(sprite)
+    isGameOver = False
     
+    while not isGameOver:
+        score += 1
+        pressed_keys = kb.get_pressed_keys()
+        if pressed_keys != prev_pressed_keys:
+            if ";" in pressed_keys and ";" not in prev_pressed_keys: # up arrow
+                sprite.jump()
+                
+        prev_pressed_keys = pressed_keys
+        
+        tft.fill(s3lcd.BLACK)
+        tft.hline(0, 128, 240, s3lcd.WHITE)
+        tft.text(small_font, str(score), tft.width() - len(str(score)) * small_font.WIDTH,
+            2)
+        
+        sprite.move(obstacle)
+        obstacle.move(score)
+        check_collisions(sprite, obstacle)
+        isGameOver = not sprite.visible
+        
+        sprite.draw()
+        obstacle.draw()
+        tft.show()
+        
+        time.sleep(0.03)
+        
+    gameover_text = "Game Over"
+    tft.text(big_font, gameover_text, tft.width() // 2 - len(gameover_text) // 2 * big_font.WIDTH,
+            tft.height() // 2 - big_font.HEIGHT)
+    score_text = "Score: " + str(score)
+    tft.text(small_font, score_text, tft.width() // 2 - len(score_text) // 2 * small_font.WIDTH,
+            tft.height() // 2 - small_font.HEIGHT + 40)
+    tft.show()
+    time.sleep(2)
 
 while True:
-    pressed_keys = kb.get_pressed_keys()
-    if pressed_keys != prev_pressed_keys:
-        if ";" in pressed_keys and ";" not in prev_pressed_keys: # up arrow
-            sprite.jump()
-            
-    prev_pressed_keys = pressed_keys
-    
-    tft.fill(s3lcd.BLACK)
-    tft.hline(0, 128, 240, s3lcd.WHITE)
-    
-    sprite.move(obstacle)
-    obstacle.move()
-    
-    sprite.draw()
-    obstacle.draw()
-    tft.show()
-    
-    time.sleep(0.03)
+    play_game()
+
